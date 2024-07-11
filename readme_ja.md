@@ -59,6 +59,7 @@ VoiceNoteプロジェクトは、以下のオープンソースプロジェク�
 
 - [Faster Whisper](https://github.com/guillaumekln/faster-whisper): 高速で効率的な音声認識モデル
 - [Flask](https://flask.palletsprojects.com/): 軽量で拡張可能なPythonウェブフレームワーク
+- [Gunicorn](https://gunicorn.org/): A Python WSGI HTTP サーバ
 - [Celery](https://docs.celeryproject.org/): 分散タスクキューシステム
 - [Redis](https://redis.io/): 高性能なインメモリデータストア
 - [PyTorch](https://pytorch.org/): オープンソースの機械学習フレームワーク
