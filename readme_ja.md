@@ -22,7 +22,7 @@ VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文
 
 1. このリポジトリをクローンします：
    ```
-   git clone https://github.com/yourusername/VoiceNote.git
+   git clone https://github.com/Ecomott-DataAnalytics/VoiceNote.git
    cd VoiceNote
    ```
 
