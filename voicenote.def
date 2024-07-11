@@ -1,0 +1,50 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+
+%setup
+    echo "Asia/Tokyo" > ${SINGULARITY_ROOTFS}/etc/timezone
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    export TZ=Asia/Tokyo
+
+    apt-get update && apt-get upgrade -y
+    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates
+
+    # Python 3.10 installation
+    mkdir -p /etc/apt/keyrings
+    gpg --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+    gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | tee /etc/apt/keyrings/deadsnakes.gpg > /dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes.list
+    apt-get update
+    apt-get install -y python3.10 python3.10-distutils python3.10-dev python3.10-venv
+
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+    update-alternatives --set python3 /usr/bin/python3.10
+
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    python3 get-pip.py
+    rm get-pip.py
+
+    echo 'export PATH=/usr/local/cuda/bin:$PATH' >> $SINGULARITY_ENVIRONMENT
+    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> $SINGULARITY_ENVIRONMENT
+
+    # Install required Python packages
+    pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+    pip3 install faster-whisper flask gunicorn celery redis psutil gputil
+
+%runscript
+    export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+    export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    redis-server --daemonize yes
+    pkill -f 'celery worker'
+    CUDA_VISIBLE_DEVICES=0 celery -A whisper_service.celery worker --loglevel=INFO -n worker1@%h -P solo &
+    cd /app
+    pkill gunicorn
+    gunicorn --bind 0.0.0.0:5000 -k sync -w 4 --timeout 7500 --graceful-timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 whisper_service:app
+
+%files
+    whisper_service.py /app/whisper_service.py
+
+%environment
+    CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
