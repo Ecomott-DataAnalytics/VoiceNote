@@ -40,8 +40,8 @@ logger.info(f"Using device: {device}, Compute type: {compute_type}")
 models = {}
 
 # File storage configuration
-UPLOAD_FOLDER = '/tmp/whisper_uploads'
-RESULT_FOLDER = '/tmp/whisper_results'
+UPLOAD_FOLDER = '/tmp/voicenote_uploads'
+RESULT_FOLDER = '/tmp/voicenote_results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
@@ -50,12 +50,12 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Faster WhisperによるAudio/Videoの文字起こし</title>
+    <title>VoiceNote</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
-    <h1>Faster WhisperによるAudio/Videoの文字起こし</h1>
+    <h1>Faster WhisperによるAudio/Videoの文字起こしサービスです</h1>
     <form id="transcription-form" enctype="multipart/form-data">
         <input type="file" name="file" accept="audio/*,video/*"><br><br>
         <label for="language">文字起こししたい言語を指定（不明な場合はAuto）:</label>
