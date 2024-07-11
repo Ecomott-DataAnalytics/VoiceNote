@@ -70,3 +70,7 @@ The VoiceNote project is built upon the following open-source projects. We exten
 We would also like to express our appreciation to the [OpenAI Whisper](https://github.com/openai/whisper) team. Without their groundbreaking research and publicly released models, this project would not have been possible.
 
 VoiceNote would not exist without the efforts and dedication of these projects and their contributors. We extend our deepest appreciation to the open-source community.
+
+## Note
+
+This project is a renamed and extended version of the content originally published in the Ecomott Tech Blog article "[社内文字起こしサービス（仮）をサクっと立てた話](https://www.ecomottblog.com/?p=13901)" (How we quickly set up an in-house transcription service (tentative)).
