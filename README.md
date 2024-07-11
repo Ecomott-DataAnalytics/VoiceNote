@@ -20,7 +20,7 @@ VoiceNote is a Flask-based web application that provides audio and video transcr
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/VoiceNote.git
+   git clone https://github.com/Ecomott-DataAnalytics/VoiceNote.git
    cd VoiceNote
    ```
 
