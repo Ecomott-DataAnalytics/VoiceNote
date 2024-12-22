@@ -1,5 +1,7 @@
 import multiprocessing
 from flask import Flask, request, send_file, render_template_string, jsonify
+# 追加: whisperのインポート
+import whisper
 from faster_whisper import WhisperModel
 import os
 import torch
@@ -37,6 +39,7 @@ compute_type = "float16" if device == "cuda" else "int8"
 logger.info(f"Using device: {device}, Compute type: {compute_type}")
 
 # Model storage
+# (engine, model_name) の組み合わせでキャッシュ
 models = {}
 
 # File storage configuration
@@ -45,7 +48,7 @@ RESULT_FOLDER = '/tmp/voicenote_results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-# HTML template (unchanged)
+# HTML template (エンジン選択欄を追加)
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -55,7 +58,7 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
-    <h1>Faster WhisperによるAudio/Videoの文字起こしサービスです</h1>
+    <h1>Faster Whisper/WhisperによるAudio/Videoの文字起こしサービスです</h1>
     <form id="transcription-form" enctype="multipart/form-data">
         <input type="file" name="file" accept="audio/*,video/*"><br><br>
         <label for="language">文字起こししたい言語を指定（不明な場合はAuto）:</label>
@@ -64,9 +67,15 @@ HTML_TEMPLATE = """
             <option value="auto">Auto-detect</option>
             <option value="en">English</option>
         </select><br><br>
+        <label for="engine">エンジン選択:</label>
+        <select name="engine" id="engine">
+            <option value="faster-whisper">Faster-Whisper</option>
+            <option value="whisper">Whisper</option>
+        </select><br><br>
         <label for="model">モデル選択:</label>
-        <select name="model" id="model">
+        <select name="model" id="model">turbo
             <option value="large-v3">Large-v3</option>
+            <option value="turbo">turbo</option>
             <option value="medium">Medium</option>
         </select><br><br>
         <input type="submit" value="Transcribe">
@@ -129,47 +138,72 @@ def log_system_resources():
     if gpu_info:
         logger.info(f"GPU Usage: {gpu_info.memoryUsed}MB / {gpu_info.memoryTotal}MB")
 
-def load_model(model_name):
-    if model_name not in models:
-        logger.info(f"Loading model: {model_name}")
+def load_model(engine, model_name):
+    # キャッシュされたモデルがあればそれを使う
+    if (engine, model_name) not in models:
+        logger.info(f"Loading model: {model_name} with engine: {engine}")
         try:
-            models[model_name] = WhisperModel(model_name, device=device, compute_type=compute_type)
-            logger.info(f"Model {model_name} loaded successfully")
+            if engine == "faster-whisper":
+                # Faster-Whisperモデルのロード
+                models[(engine, model_name)] = WhisperModel(model_name, device=device, compute_type=compute_type)
+            elif engine == "whisper":
+                # Whisper公式モデルのロード
+                # whisperモデル名は英語モデルなどの場合"medium","large"などが想定される
+                # whisperは公式モデルで "medium" "large" などがあるため、そのままロード
+                models[(engine, model_name)] = whisper.load_model(model_name, device=device)
+            else:
+                raise ValueError("Unknown engine specified")
+            logger.info(f"Model {model_name} with {engine} loaded successfully")
         except Exception as e:
-            logger.error(f"Error loading model {model_name}: {str(e)}")
+            logger.error(f"Error loading model {model_name} with {engine}: {str(e)}")
             raise
-    return models[model_name]
+    return models[(engine, model_name)]
 
 @celery.task(bind=True, soft_time_limit=7200, time_limit=7500)
-def transcribe_audio(self, file_path, language, model_name, original_filename):
+def transcribe_audio(self, file_path, language, engine, model_name, original_filename):
     try:
         start_time = time.time()
-        logger.info(f"Starting transcription: file={file_path}, language={language}, model={model_name}")
+        logger.info(f"Starting transcription: file={file_path}, language={language}, engine={engine}, model={model_name}")
         log_system_resources()
 
-        model = load_model(model_name)
+        model = load_model(engine, model_name)
         
         logger.info("Starting transcription")
-        segments, info = model.transcribe(file_path, language=language if language != 'auto' else None)
-        
+        if engine == "faster-whisper":
+            # Faster-Whisperの場合
+            segments, info = model.transcribe(file_path, language=language if language != 'auto' else None)
+            segments_list = list(segments)
+            detected_language = info.language
+        else:
+            # whisper公式モデルの場合
+            # whisperはresult = model.transcribe("audioファイルパス", language="言語コード(任意)")
+            # result["segments"]で分割されたテキストが取得可能
+            # autoの場合はlanguage省略、それ以外はlanguage指定
+            kwargs = {}
+            if language != 'auto':
+                kwargs['language'] = language
+            result = model.transcribe(file_path, **kwargs)
+            segments_list = result["segments"]
+            detected_language = result["language"]
+
         logger.info("Processing segments")
-        segments_list = list(segments)
         total_segments = len(segments_list)
         
         output_filename = f"{uuid.uuid4()}.txt"
         output_file = os.path.join(RESULT_FOLDER, output_filename)
         
         with open(output_file, 'w', encoding='utf-8') as f:
-            #f.write(f"Detected language: {info.language}\n\n")
+            # 必要であれば検出言語を書くことも可能
+            # f.write(f"Detected language: {detected_language}\n\n")
             for i, segment in enumerate(segments_list):
                 progress = min(100, int((i + 1) / total_segments * 100))
                 if i % 10 == 0 or progress == 100:
                     self.update_state(state='PROGRESS', meta={'progress': progress})
                     logger.info(f"Transcription progress: {progress}%")
-                    #log_system_resources()
-                
-                # Write segment text
-                f.write(f"{segment.text} ")
+                # faster-whisperの場合: segment.text でテキスト
+                # whisperの場合: segment["text"]でテキスト
+                text = segment.text if engine == "faster-whisper" else segment["text"]
+                f.write(f"{text} ")
 
         logger.info(f"Transcription completed: {total_segments} segments")
 
@@ -215,6 +249,7 @@ def transcribe():
     file = request.files['file']
     language = request.form.get('language', 'auto')
     model_name = request.form.get('model', 'medium')
+    engine = request.form.get('engine', 'faster-whisper')
     
     original_filename = file.filename
     file_extension = os.path.splitext(original_filename)[1]
@@ -223,7 +258,7 @@ def transcribe():
     file.save(file_path)
     logger.info(f"File saved: {file_path}")
     
-    task = transcribe_audio.delay(file_path, language, model_name, original_filename)
+    task = transcribe_audio.delay(file_path, language, engine, model_name, original_filename)
     logger.info(f"Transcription task started: {task.id}")
     
     return jsonify({"task_id": task.id}), 202
@@ -259,11 +294,9 @@ def get_result(task_id):
         result_file, original_filename = task.result
         if os.path.exists(result_file):
             try:
-                # 元のファイル名の拡張子を.txtに変更
                 download_name = os.path.splitext(original_filename)[0] + '.txt'
                 return_value = send_file(result_file, as_attachment=True, download_name=download_name)
                 
-                # ファイルを送信した後、非同期でファイルを削除
                 @return_value.call_on_close
                 def delete_file_after_send():
                     try:

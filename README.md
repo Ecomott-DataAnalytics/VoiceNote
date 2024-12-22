@@ -1,12 +1,13 @@
 # VoiceNote
 
-VoiceNote is a Flask-based web application that provides audio and video transcription services using the Faster Whisper model. It leverages GPU acceleration for efficient processing and uses Celery for asynchronous task management.
+VoiceNote is a Flask-based web application that provides audio and video transcription services using OpenAI Whisper or the Faster Whisper model. It leverages GPU acceleration for efficient processing and uses Celery for asynchronous task management.
 
 ## Features
 
 - Transcribe audio and video files using Faster Whisper
 - Support for multiple languages (including auto-detection)
-- Choice of model sizes (Large-v3 and Medium)
+- Choice of Engine (Faster-Whisper, OpenAI-Whisper)
+- Choice of model sizes (Large-v3 and Turbo, Medium)
 - Asynchronous processing with real-time progress updates
 - GPU acceleration for faster transcription
 - Web interface for easy file upload and result retrieval
@@ -59,6 +60,7 @@ See LICENSE
 
 The VoiceNote project is built upon the following open-source projects. We extend our heartfelt gratitude to the developers and contributors of these projects:
 
+- [OpenAI Whisper](https://github.com/openai/whisper): A general-purpose speech recognition model
 - [Faster Whisper](https://github.com/guillaumekln/faster-whisper): A fast and efficient speech recognition model
 - [Flask](https://flask.palletsprojects.com/): A lightweight and extensible Python web framework
 - [Gunicorn](https://gunicorn.org/): A Python WSGI HTTP Server for UNIX
@@ -67,7 +69,7 @@ The VoiceNote project is built upon the following open-source projects. We exten
 - [PyTorch](https://pytorch.org/): An open-source machine learning framework
 - [NVIDIA CUDA](https://developer.nvidia.com/cuda-zone): A GPU computing platform
 
-We would also like to express our appreciation to the [OpenAI Whisper](https://github.com/openai/whisper) team. Without their groundbreaking research and publicly released models, this project would not have been possible.
+We would also like to express our appreciation to the team. Without their groundbreaking research and publicly released models, this project would not have been possible.
 
 VoiceNote would not exist without the efforts and dedication of these projects and their contributors. We extend our deepest appreciation to the open-source community.
 

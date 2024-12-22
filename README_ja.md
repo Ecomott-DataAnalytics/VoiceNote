@@ -1,6 +1,6 @@
 # VoiceNote
 
-VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文字起こしサービスを提供するFlaskベースのWebアプリケーションです。効率的な処理のためにGPUアクセラレーションを活用し、非同期タスク管理にCeleryを使用しています。
+VoiceNoteは、Faster Whisper／OpenAI Whisperモデルを使用して音声および動画の文字起こしサービスを提供するFlaskベースのWebアプリケーションです。効率的な処理のためにGPUアクセラレーションを活用し、非同期タスク管理にCeleryを使用しています。
 
 
 
@@ -8,7 +8,8 @@ VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文
 
 - Faster Whisperを使用した音声および動画ファイルの文字起こし
 - 複数言語のサポート（自動検出を含む）
-- モデルサイズの選択（Large-v3およびMedium）
+- エンジンの選択（Faster-WhisperかOpenAI-Whisper）
+- モデルサイズの選択（Large-v3, TurboおよびMedium）
 - リアルタイムの進捗更新を伴う非同期処理
 - より高速な文字起こしのためのGPUアクセラレーション
 - 簡単なファイルアップロードと結果取得のためのWebインターフェース
@@ -57,6 +58,7 @@ VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文
 
 VoiceNoteプロジェクトは、以下のオープンソースプロジェクトの上に構築されています。これらのプロジェクトの開発者とコントリビューターに心から感謝いたします：
 
+- [OpenAI Whisper](https://github.com/openai/whisper): 汎用の音声認識モデル
 - [Faster Whisper](https://github.com/guillaumekln/faster-whisper): 高速で効率的な音声認識モデル
 - [Flask](https://flask.palletsprojects.com/): 軽量で拡張可能なPythonウェブフレームワーク
 - [Gunicorn](https://gunicorn.org/): A Python WSGI HTTP サーバ
@@ -64,8 +66,6 @@ VoiceNoteプロジェクトは、以下のオープンソースプロジェク�
 - [Redis](https://redis.io/): 高性能なインメモリデータストア
 - [PyTorch](https://pytorch.org/): オープンソースの機械学習フレームワーク
 - [NVIDIA CUDA](https://developer.nvidia.com/cuda-zone): GPUコンピューティングプラットフォーム
-
-また、[OpenAI Whisper](https://github.com/openai/whisper)チームにも感謝いたします。彼らの革新的な研究と公開モデルがなければ、このプロジェクトは実現しませんでした。
 
 これらのプロジェクトとその貢献者たちの努力と献身なくして、VoiceNoteは存在しませんでした。オープンソースコミュニティに深い感謝の意を表します。
 
