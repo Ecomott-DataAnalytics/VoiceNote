@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: nvcr.io/nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
+From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
 
 %setup
     echo "Asia/Tokyo" > ${SINGULARITY_ROOTFS}/etc/timezone
@@ -9,7 +9,7 @@ From: nvcr.io/nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
     export TZ=Asia/Tokyo
 
     apt-get update && apt-get upgrade -y
-    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates
+    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates ffmpeg
 
     # Python 3.10 installation
     mkdir -p /etc/apt/keyrings
@@ -30,21 +30,23 @@ From: nvcr.io/nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
     echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> $SINGULARITY_ENVIRONMENT
 
     # Install required Python packages
-    pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-    pip3 install faster-whisper flask gunicorn celery redis psutil gputil
-
-%runscript
-    export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-    export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
-    redis-server --daemonize yes
-    pkill -f 'celery worker'
-    celery -A voicenote.celery worker --loglevel=INFO -n worker1@%h -P solo &
-    cd /app
-    pkill gunicorn
-    gunicorn --bind 0.0.0.0:5000 -k sync -w 4 --timeout 7500 --graceful-timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 voicenote:app
+    pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu115
+    pip3 install ctranslate2==4.4.0
+    pip3 install openai-whisper faster-whisper flask gunicorn celery redis psutil gputil
 
 %files
     voicenote.py /app/voicenote.py
 
 %environment
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+
+%runscript
+    export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+    export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    redis-server --daemonize yes
+    cd /app
+    pkill -f 'celery worker'
+    celery -A voicenote.celery worker --loglevel=INFO -n worker1@%h -P solo &
+    # cd /app #move up
+    pkill gunicorn
+    gunicorn --bind 0.0.0.0:5000 -k sync -w 4 --timeout 7500 --graceful-timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 voicenote:app
