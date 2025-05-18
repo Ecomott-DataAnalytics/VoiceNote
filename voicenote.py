@@ -53,7 +53,14 @@ def log_system_resources():
     cpu_percent = psutil.cpu_percent()
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    gpu_info = GPUtil.getGPUs()[0] if GPUtil.getGPUs() else None
+    try:
+        gpus = GPUtil.getGPUs()
+        gpu_info = gpus[0] if gpus else None
+        if not gpus:
+            logger.warning("GPU情報が取得できません")
+    except Exception as e:
+        gpu_info = None
+        logger.warning(f"GPU情報の取得中に例外が発生しました: {str(e)}")
     
     logger.info(f"CPU使用率: {cpu_percent}%")
     logger.info(f"メモリ使用率: {memory.percent}% (使用中: {memory.used / 1024 / 1024:.2f} MB, 利用可能: {memory.available / 1024 / 1024:.2f} MB)")
