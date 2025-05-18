@@ -1,6 +1,7 @@
 # VoiceNote
 
-VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文字起こしサービスを提供するFlaskベースのWebアプリケーションです。効率的な処理のためにGPUアクセラレーションを活用し、非同期タスク管理にCeleryを使用しています。
+VoiceNoteは、Faster Whisperモデルを使用して音声および動画の文字起こしサービスを提供するFlaskベースのWebアプリケーションです。
+効率的な処理のためにGPUアクセラレーションを活用し、非同期タスク管理にCeleryを使用しています。
 
 ## 特徴
 
