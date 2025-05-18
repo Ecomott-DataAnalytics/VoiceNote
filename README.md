@@ -42,6 +42,24 @@ VoiceNote is a Flask-based web application that provides audio and video transcr
 
 4. Wait for the transcription to complete and download the result
 
+## Project Structure
+
+The application follows a standard Flask project structure:
+
+```
+VoiceNote/
+├── voicenote.py         # Main Flask application
+├── voicenote.def        # Singularity container definition
+├── static/              # Static files
+│   ├── css/
+│   │   └── style.css    # CSS styles
+│   └── js/
+│       └── main.js      # JavaScript for UI interactivity
+├── templates/
+│   └── index.html       # HTML template for the web interface
+└── README.md            # Project documentation
+```
+
 ## Configuration
 
 You can modify the `voicenote.py` file to adjust various settings such as:

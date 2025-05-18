@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>VoiceNote - 音声・動画文字起こしサービス</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">VoiceNote</h1>
+            <p class="subtitle">音声・動画ファイルからテキストを作成する文字起こしサービス</p>
+        </div>
+        
+        <div class="card">
+            <div class="panel">
+                <div class="panel-left">
+                    <form id="transcription-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="file">音声または動画ファイルをアップロード</label>
+                            <input type="file" name="file" id="file" accept="audio/*,video/*" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="language">言語選択</label>
+                            <select name="language" id="language">
+                                <option value="ja">日本語</option>
+                                <option value="auto">自動検出</option>
+                                <option value="en">英語</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="engine">エンジン選択</label>
+                            <select name="engine" id="engine">
+                                <option value="faster-whisper">Faster-Whisper（推奨）</option>
+                                <option value="whisper">Whisper</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="model">モデル選択</label>
+                            <select name="model" id="model">
+                                <option value="large-v3">Large-v3（高精度）</option>
+                                <option value="turbo">Turbo（高速）</option>
+                                <option value="medium">Medium（バランス型）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit">文字起こし開始</button>
+                        </div>
+                    </form>
+                    
+                    <div class="accordion">
+                        <div class="accordion-header">使い方</div>
+                        <div class="accordion-content">
+                            <ol>
+                                <li>音声または動画ファイルをアップロードします</li>
+                                <li>言語を選択します（自動検出、日本語、英語）</li>
+                                <li>使用するエンジンとモデルを選択します</li>
+                                <li>「文字起こし開始」ボタンをクリックします</li>
+                                <li>処理が完了するまでお待ちください</li>
+                                <li>完了したらダウンロードリンクが表示されます</li>
+                            </ol>
+                            <p>注意：ファイルサイズや長さによって処理時間が異なります。大きなファイルは時間がかかる場合があります。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-right">
+                    <div id="alerts"></div>
+                    
+                    <h3>処理状態</h3>
+                    <div id="status" class="status">ファイルをアップロードして文字起こしを開始してください</div>
+                    
+                    <div class="progress-container">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                    <div id="progress-text"></div>
+                    
+                    <h3>結果</h3>
+                    <div id="result" class="result-area">
+                        <p>文字起こし結果がここに表示されます</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
