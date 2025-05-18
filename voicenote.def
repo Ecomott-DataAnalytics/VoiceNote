@@ -3,6 +3,9 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
 
 %setup
     echo "Asia/Tokyo" > ${SINGULARITY_ROOTFS}/etc/timezone
+    mkdir -p ${SINGULARITY_ROOTFS}/app/templates
+    mkdir -p ${SINGULARITY_ROOTFS}/app/static/css
+    mkdir -p ${SINGULARITY_ROOTFS}/app/static/js
 
 %post
     export DEBIAN_FRONTEND=noninteractive
@@ -33,9 +36,13 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
     pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu115
     pip3 install ctranslate2==4.4.0
     pip3 install openai-whisper faster-whisper flask gunicorn celery redis psutil gputil
+    pip3 install flask-cors
 
 %files
     voicenote.py /app/voicenote.py
+    templates/index.html /app/templates/index.html
+    static/css/style.css /app/static/css/style.css
+    static/js/main.js /app/static/js/main.js
 
 %environment
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -47,6 +54,5 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
     cd /app
     pkill -f 'celery worker'
     celery -A voicenote.celery worker --loglevel=INFO -n worker1@%h -P solo &
-    # cd /app #move up
     pkill gunicorn
     gunicorn --bind 0.0.0.0:5000 -k sync -w 4 --timeout 7500 --graceful-timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 voicenote:app
