@@ -42,6 +42,15 @@ VoiceNote is a Flask-based web application that provides audio and video transcr
 
 4. Wait for the transcription to complete and download the result
 
+## Running Tests
+
+The repository includes a small test suite that can be executed with Python's
+built-in `unittest` module. From the project root run:
+
+```bash
+python -m unittest discover -s tests
+```
+
 ## Project Structure
 
 The application follows a standard Flask project structure:
@@ -57,6 +66,8 @@ VoiceNote/
 │       └── main.js      # JavaScript for UI interactivity
 ├── templates/
 │   └── index.html       # HTML template for the web interface
+├── tests/               # Unit tests
+│   └── test_endpoints.py
 └── README.md            # Project documentation
 ```
 
