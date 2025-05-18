@@ -12,7 +12,7 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
     export TZ=Asia/Tokyo
 
     apt-get update && apt-get upgrade -y
-    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates ffmpeg
+    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates ffmpeg git libsndfile1
 
     # Python 3.10 installation
     mkdir -p /etc/apt/keyrings
@@ -35,8 +35,27 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
     # Install required Python packages
     pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu115
     pip3 install ctranslate2==4.4.0
-    pip3 install openai-whisper faster-whisper flask gunicorn celery redis psutil gputil
-    pip3 install flask-cors
+    
+    # Whisperモデル関連パッケージ
+    pip3 install openai-whisper faster-whisper
+    
+    # Webアプリ関連パッケージ
+    pip3 install flask gunicorn celery redis psutil gputil flask-cors
+    
+    # Kotoba-Whisper v2.2に必要なパッケージ
+    pip3 install transformers accelerate huggingface-hub
+    pip3 install librosa soundfile
+
+    # 話者分離と句読点に必要なパッケージ
+    # 特定のバージョンを指定して依存関係の問題を避ける
+    pip3 install pyannote.audio==2.1.1
+    pip3 install einops torch_audiomentations
+    pip3 install punctuators==0.0.5
+    
+    # エラーハンドリングを強化したdiarizersインストール
+    pip3 install --no-deps git+https://github.com/huggingface/diarizers.git
+    # 不足しているdiarizersの依存関係を追加
+    pip3 install torchmetrics scipy pydub
 
 %files
     voicenote.py /app/voicenote.py
