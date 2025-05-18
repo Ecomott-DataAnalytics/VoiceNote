@@ -1,6 +1,7 @@
 # VoiceNote
 
-VoiceNote is a Flask-based web application that provides audio and video transcription services using the Faster Whisper model. It leverages GPU acceleration for efficient processing and uses Celery for asynchronous task management.
+VoiceNote is a Flask-based web application that provides audio and video transcription services using the Faster Whisper model.
+It leverages GPU acceleration for efficient processing and uses Celery for asynchronous task management.
 
 ## Features
 
