@@ -6,7 +6,7 @@ VoiceNote is a Flask-based web application that provides audio and video transcr
 
 - Transcribe audio and video files using Faster Whisper
 - Support for multiple languages (including auto-detection)
-- Choice of model sizes (Large-v3 and Medium)
+- Choice of model sizes (Large-v3, Turbo, and Medium)
 - Asynchronous processing with real-time progress updates
 - GPU acceleration for faster transcription
 - Web interface for easy file upload and result retrieval
