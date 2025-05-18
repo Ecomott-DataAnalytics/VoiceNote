@@ -202,10 +202,11 @@ def task_status(task_id):
     if task.state == 'PENDING':
         response = {'state': task.state, 'status': 'Task is waiting for execution.'}
     elif task.state == 'PROGRESS':
+        progress = task.info.get('progress', 0) if task.info else 0
         response = {
             'state': task.state,
             'status': 'Task is in progress.',
-            'progress': task.info.get('progress', 0)
+            'progress': progress
         }
     elif task.state == 'SUCCESS':
         response = {'state': task.state, 'status': 'Task completed successfully.'}
