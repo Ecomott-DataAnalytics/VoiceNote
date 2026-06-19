@@ -72,6 +72,7 @@ PY
     engines/__init__.py /app/engines/__init__.py
     engines/base.py /app/engines/base.py
     engines/factory.py /app/engines/factory.py
+    engines/chunking.py /app/engines/chunking.py
     engines/faster_whisper_engine.py /app/engines/faster_whisper_engine.py
     engines/kotoba_engine.py /app/engines/kotoba_engine.py
     engines/qwen3_asr_engine.py /app/engines/qwen3_asr_engine.py
@@ -84,8 +85,10 @@ PY
 
 %test
     # パッケージ配置とYAML読込のスモークテスト（重いMLモデルはロードしない）。
+    # voicenote.py が遅延importする engines.chunking もここで読み込み、
+    # %files への入れ忘れがビルド時に落ちるようにする。
     cd /app
-    python3 -c "import config; from engines.factory import EngineFactory; print('package layout OK:', EngineFactory)"
+    python3 -c "import config; from engines.factory import EngineFactory; from engines.chunking import to_wav, transcribe_chunked; print('package layout OK:', EngineFactory)"
     python3 -c "import config; print('models loaded:', len(config.list_models()))"
 
 %environment
