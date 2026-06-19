@@ -55,6 +55,25 @@ class ChunkingTestCase(unittest.TestCase):
         self.assertEqual(engine.calls, ["input.mp4"])
         self.assertEqual(result.text, "text0")
 
+    def test_to_wav_builds_ffmpeg_command(self):
+        captured = {}
+
+        def fake_run(cmd, check):
+            captured["cmd"] = cmd
+            captured["check"] = check
+
+        with patch.object(chunking.subprocess, "run", side_effect=fake_run):
+            out = chunking.to_wav("input.mp4")
+
+        self.assertTrue(out.endswith(".wav"))
+        cmd = captured["cmd"]
+        self.assertEqual(cmd[0], "ffmpeg")
+        self.assertIn("input.mp4", cmd)
+        self.assertIn("16000", cmd)      # 16k へ正規化
+        self.assertIn("1", cmd)          # mono (-ac 1)
+        self.assertEqual(cmd[-1], out)   # 出力は最後の引数
+        self.assertTrue(captured["check"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,6 +29,27 @@ def _chunk_seconds() -> int:
         return 30
 
 
+def to_wav(file_path: str) -> str:
+    """任意のメディアを 16k/mono WAV に正規化して一時ファイルパスを返す。
+
+    ffmpeg に**ファイルパス**を渡す（シーク可能）ため、transformers pipeline の
+    stdin パイプ方式では失敗する mp4 等のコンテナも確実にデコードできる。
+    呼び出し側で生成ファイルを削除すること。
+    """
+    import uuid
+
+    out = os.path.join(tempfile.gettempdir(), f"vn_norm_{uuid.uuid4().hex}.wav")
+    cmd = [
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+        "-i", file_path,
+        "-vn", "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le",
+        out,
+    ]
+    logger.info("入力を 16k/mono WAV に正規化します: %s", file_path)
+    subprocess.run(cmd, check=True)
+    return out
+
+
 def split_audio(file_path: str, out_dir: str, chunk_seconds: int) -> list:
     """ffmpeg で音声を 16k/mono WAV の連番チャンクへ分割し、パス一覧を返す。"""
     pattern = os.path.join(out_dir, "chunk_%05d.wav")

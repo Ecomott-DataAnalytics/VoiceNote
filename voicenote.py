@@ -83,10 +83,21 @@ def transcribe_audio(self, file_path, language, model_name, original_filename):
             self.update_state(state='PROGRESS', meta={'progress': percent})
             logger.info(f"文字起こし進捗: {percent}%")
 
-        # 長尺を内部で扱えないエンジン(Reazon/Qwen)はffmpegで分割して逐次処理する
         if getattr(engine, "chunks_internally", True):
-            result = engine.transcribe(file_path, language=language, progress_cb=progress_cb)
+            # 内部で長尺を扱うエンジン(faster-whisper/Kotoba)。
+            # 入力を 16k/mono WAV に正規化してから渡す（mp4等のコンテナデコード対策）。
+            from engines.chunking import to_wav
+            wav_path = to_wav(file_path)
+            try:
+                result = engine.transcribe(wav_path, language=language, progress_cb=progress_cb)
+            finally:
+                if wav_path != file_path and os.path.exists(wav_path):
+                    try:
+                        os.remove(wav_path)
+                    except Exception as e:
+                        logger.warning(f"正規化WAVの削除に失敗: {e}")
         else:
+            # 長尺を内部で扱えないエンジン(Reazon/Qwen)はffmpegで分割して逐次処理する
             from engines.chunking import transcribe_chunked
             logger.info("内部分割非対応エンジンのためチャンク分割で処理します")
             result = transcribe_chunked(engine, file_path, language=language, progress_cb=progress_cb)
