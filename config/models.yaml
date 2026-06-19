@@ -12,14 +12,14 @@
 #
 # default : UIの初期選択モデルID
 
-default: reazon-research/reazonspeech-k2-v2
+default: large-v3
 
 models:
   - id: large-v3
     engine: faster-whisper
     category: Whisper
     label: Large-v3
-    description: "多言語対応の汎用モデル。日本語・英語など幅広い言語に対応。"
+    description: "多言語対応の汎用モデル。日本語・英語など幅広い言語に対応（既定）。"
     vram: "4〜6GB"
 
   - id: kotoba-tech/kotoba-whisper-v2.2
@@ -46,16 +46,9 @@ models:
     engine: reazon
     category: ReazonSpeech
     label: k2-v2
-    description: "日本語専用・高速。迷ったらこれ（標準のおすすめ）。"
+    description: "日本語専用・高速・軽量。"
     vram: "2〜4GB"
     languages: [ja]
-
-  - id: Qwen/Qwen3-ASR-0.6B
-    engine: qwen3
-    category: Qwen3-ASR
-    label: 0.6B
-    description: "多言語対応・軽量で高速。"
-    vram: "6〜10GB"
 
   - id: Qwen/Qwen3-ASR-1.7B
     engine: qwen3

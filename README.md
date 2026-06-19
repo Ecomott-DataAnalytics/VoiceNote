@@ -20,10 +20,9 @@ VoiceNote is a Flask-based web application for audio/video transcription with a 
 | Kotoba | `kotoba-tech/kotoba-whisper-v2.2` | kotoba (diarization) | Japanese | 5–8GB |
 | Kotoba | `kotoba-tech/kotoba-whisper-v2.0` | kotoba (simple) | Japanese | 5–8GB |
 | ReazonSpeech | `reazon-research/reazonspeech-k2-v2` | reazon | Japanese | 2–4GB |
-| Qwen3-ASR | `Qwen/Qwen3-ASR-0.6B` | qwen3 | multilingual | 6–10GB |
 | Qwen3-ASR | `Qwen/Qwen3-ASR-1.7B` | qwen3 | multilingual | 12–20GB |
 
-**Recommended use**: default = ReazonSpeech k2-v2 (Japanese, light) / high accuracy = Kotoba v2.2 (speaker diarization, meeting minutes) / best accuracy = Qwen3-ASR 1.7B (multilingual, heavy) / general multilingual = Whisper Large-v3.
+**Recommended use**: default = Whisper Large-v3 (general multilingual) / Japanese & light = ReazonSpeech k2-v2 / high accuracy = Kotoba v2.2 (speaker diarization, meeting minutes) / best accuracy = Qwen3-ASR 1.7B (multilingual, heavy).
 
 > **Kotoba v2.2 diarization**: requires accepting the terms of the gated pyannote models (`pyannote/segmentation-3.0`, `pyannote/speaker-diarization-3.1`) and passing a HuggingFace token via `HF_TOKEN` (or `SINGULARITYENV_HF_TOKEN`). If you don't want to set up a token, use Kotoba v2.0 (simple).
 
