@@ -29,6 +29,8 @@ VoiceNote is a Flask-based web application for audio/video transcription with a 
 
 > **GPUs**: all models run on common CUDA setups including V100 (32GB) × 4. Since V100 (Volta) lacks bfloat16 / FlashAttention-2, Qwen3-ASR automatically runs in fp16 + sdpa.
 
+> **Long files**: ReazonSpeech k2 and Qwen3-ASR process the whole input in a single pass, so the server automatically splits long inputs with ffmpeg (30s by default, configurable via `VN_CHUNK_SECONDS`) and transcribes chunk by chunk. Whisper / Kotoba handle long audio internally and are not split.
+
 ## Requirements
 
 - NVIDIA GPU with CUDA support (driver R550+ when using CUDA 12.4)

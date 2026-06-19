@@ -62,6 +62,12 @@ class STTEngine(ABC):
 
     name: str = "base"
 
+    # 長尺音声を自前で分割/ストリーミング処理できるか。
+    # True  : エンジン内部で長尺を扱える（faster-whisperのVAD, Kotobaのchunk_length_s）。
+    # False : 入力全体を1パス処理するため、長尺はタスク側でffmpeg分割してから渡す
+    #         （Reazon k2 や Qwen3-ASR の簡易API）。
+    chunks_internally: bool = True
+
     def __init__(self, model_id: str, options: Optional[dict] = None):
         self.model_id = model_id
         self.options = options or {}

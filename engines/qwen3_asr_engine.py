@@ -29,6 +29,8 @@ _LANG_MAP = {
 
 class Qwen3ASREngine(STTEngine):
     name = "qwen3"
+    # 簡易APIは入力全体を1パス処理するため、長尺はタスク側で分割する。
+    chunks_internally = False
 
     def load(self) -> None:
         if self._loaded:

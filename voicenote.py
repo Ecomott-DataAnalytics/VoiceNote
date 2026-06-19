@@ -83,7 +83,13 @@ def transcribe_audio(self, file_path, language, model_name, original_filename):
             self.update_state(state='PROGRESS', meta={'progress': percent})
             logger.info(f"文字起こし進捗: {percent}%")
 
-        result = engine.transcribe(file_path, language=language, progress_cb=progress_cb)
+        # 長尺を内部で扱えないエンジン(Reazon/Qwen)はffmpegで分割して逐次処理する
+        if getattr(engine, "chunks_internally", True):
+            result = engine.transcribe(file_path, language=language, progress_cb=progress_cb)
+        else:
+            from engines.chunking import transcribe_chunked
+            logger.info("内部分割非対応エンジンのためチャンク分割で処理します")
+            result = transcribe_chunked(engine, file_path, language=language, progress_cb=progress_cb)
         logger.info(f"文字起こし完了: 検出言語={result.language}, セグメント数={len(result.segments)}")
 
         # 結果の書き出し（話者情報があれば話者ラベル付き）

@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 class ReazonEngine(STTEngine):
     name = "reazon"
+    # k2 は入力全体を1パス処理し長尺は非推奨（大量メモリ）。タスク側で分割する。
+    chunks_internally = False
 
     def load(self) -> None:
         if self._loaded:
