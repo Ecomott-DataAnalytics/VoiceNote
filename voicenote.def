@@ -51,12 +51,28 @@ From: nvcr.io/nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
     pip3 install flask gunicorn celery redis psutil gputil flask-cors pyyaml
 
 %files
+    # ディレクトリ一括コピーは %setup の mkdir 先と噛み合って配置がずれるため、
+    # 動作実績のある templates/static と同様に「ファイル→フルパス」で個別コピーする。
     voicenote.py /app/voicenote.py
-    engines /app/engines
-    config /app/config
+    requirements.txt /app/requirements.txt
+    engines/__init__.py /app/engines/__init__.py
+    engines/base.py /app/engines/base.py
+    engines/factory.py /app/engines/factory.py
+    engines/faster_whisper_engine.py /app/engines/faster_whisper_engine.py
+    engines/kotoba_engine.py /app/engines/kotoba_engine.py
+    engines/qwen3_asr_engine.py /app/engines/qwen3_asr_engine.py
+    engines/reazon_engine.py /app/engines/reazon_engine.py
+    config/__init__.py /app/config/__init__.py
+    config/models.yaml /app/config/models.yaml
     templates/index.html /app/templates/index.html
     static/css/style.css /app/static/css/style.css
     static/js/main.js /app/static/js/main.js
+
+%test
+    # パッケージ配置とYAML読込のスモークテスト（重いMLモデルはロードしない）。
+    cd /app
+    python3 -c "import config; from engines.factory import EngineFactory; print('package layout OK:', EngineFactory)"
+    python3 -c "import config; print('models loaded:', len(config.list_models()))"
 
 %environment
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
