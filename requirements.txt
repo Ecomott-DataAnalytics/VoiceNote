@@ -1,0 +1,35 @@
+# VoiceNote Python 依存（ローカル/CI参照用）
+#
+# GPUランタイム(torch/torchaudio)は環境のCUDAに合わせて別途インストールすること:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+# 本番コンテナの正本は voicenote.def を参照。
+
+# Web / タスクキュー
+flask
+gunicorn
+celery
+redis
+flask-cors
+
+# 設定・監視
+pyyaml
+psutil
+gputil
+
+# STTエンジン
+faster-whisper
+transformers
+accelerate
+qwen-asr
+
+# Kotoba v2.2（話者分離）
+punctuators==0.0.5
+pyannote.audio
+# diarizers は git からインストール:
+#   pip install git+https://github.com/huggingface/diarizers.git
+
+# ReazonSpeech k2-v2（公式SDK + sherpa-onnx）
+sherpa-onnx
+# k2-asr 本体は ReazonSpeech リポジトリからインストール:
+#   git clone https://github.com/reazon-research/ReazonSpeech
+#   pip install ReazonSpeech/pkg/k2-asr

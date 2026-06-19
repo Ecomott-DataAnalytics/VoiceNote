@@ -1,0 +1,58 @@
+# VoiceNote モデル定義
+#
+# 各エントリ:
+#   id       : エンジンに渡すモデル識別子（HF id や faster-whisper のモデル名）
+#   engine   : 使用エンジン (faster-whisper | kotoba | reazon | qwen3)
+#   category : UIのグループ見出し
+#   label    : UIに表示する名称
+#   vram     : VRAM目安（UI表示用。V100/32GBではいずれも余裕）
+#   languages: （任意）対応言語を限定する場合に指定
+#   options  : （任意）エンジン固有オプション（例: kotoba の diarization）
+#
+# default : UIの初期選択モデルID
+
+default: reazon-research/reazonspeech-k2-v2
+
+models:
+  - id: large-v3
+    engine: faster-whisper
+    category: Whisper
+    label: Large-v3
+    vram: "4〜6GB"
+
+  - id: kotoba-tech/kotoba-whisper-v2.2
+    engine: kotoba
+    category: Kotoba
+    label: "v2.2 (話者分離)"
+    vram: "5〜8GB"
+    languages: [ja]
+    options:
+      diarization: true
+
+  - id: kotoba-tech/kotoba-whisper-v2.0
+    engine: kotoba
+    category: Kotoba
+    label: "v2.0 (シンプル)"
+    vram: "5〜8GB"
+    languages: [ja]
+    options:
+      diarization: false
+
+  - id: reazon-research/reazonspeech-k2-v2
+    engine: reazon
+    category: ReazonSpeech
+    label: k2-v2
+    vram: "2〜4GB"
+    languages: [ja]
+
+  - id: Qwen/Qwen3-ASR-0.6B
+    engine: qwen3
+    category: Qwen3-ASR
+    label: 0.6B
+    vram: "6〜10GB"
+
+  - id: Qwen/Qwen3-ASR-1.7B
+    engine: qwen3
+    category: Qwen3-ASR
+    label: 1.7B
+    vram: "12〜20GB"

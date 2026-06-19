@@ -1,51 +1,70 @@
 Bootstrap: docker
-From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
+# CUDA 12系へ更新（Qwen3-ASR / 最新transformers / 新しいfaster-whisperに必要）。
+# ホストのNVIDIAドライバが対応するCUDAに合わせてタグを選ぶこと:
+#   12.4.1 -> ドライバ R550+ / 12.1.1 -> R530+
+From: nvcr.io/nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 %setup
     echo "Asia/Tokyo" > ${SINGULARITY_ROOTFS}/etc/timezone
     mkdir -p ${SINGULARITY_ROOTFS}/app/templates
     mkdir -p ${SINGULARITY_ROOTFS}/app/static/css
     mkdir -p ${SINGULARITY_ROOTFS}/app/static/js
+    mkdir -p ${SINGULARITY_ROOTFS}/app/engines
+    mkdir -p ${SINGULARITY_ROOTFS}/app/config
 
 %post
     export DEBIAN_FRONTEND=noninteractive
     export TZ=Asia/Tokyo
 
     apt-get update && apt-get upgrade -y
-    apt-get install -y software-properties-common curl wget gnupg redis-server ca-certificates ffmpeg
+    # Ubuntu 22.04 は python3.10 を標準搭載
+    apt-get install -y python3 python3-dev python3-venv python3-pip \
+        git curl wget ca-certificates redis-server ffmpeg
 
-    # Python 3.10 installation
-    mkdir -p /etc/apt/keyrings
-    gpg --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
-    gpg --export F23C5A6CF475977595C89F51BA6932366A755776 | tee /etc/apt/keyrings/deadsnakes.gpg > /dev/null
-    echo "deb [signed-by=/etc/apt/keyrings/deadsnakes.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/deadsnakes.list
-    apt-get update
-    apt-get install -y python3.10 python3.10-distutils python3.10-dev python3.10-venv
+    python3 -m pip install --upgrade pip
 
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
-    update-alternatives --set python3 /usr/bin/python3.10
+    # --- 機械学習ランタイム ---------------------------------------------------
+    # PyTorch (CUDA 12.4)。V100(Volta) は fp16 で動作（bf16/FA2 非対応）。
+    pip3 install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
 
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-    python3 get-pip.py
-    rm get-pip.py
+    # Faster-Whisper（ctranslate2 を同梱）
+    pip3 install faster-whisper
 
-    echo 'export PATH=/usr/local/cuda/bin:$PATH' >> $SINGULARITY_ENVIRONMENT
-    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> $SINGULARITY_ENVIRONMENT
+    # transformers 系（Kotoba / 一般ASRパイプライン）
+    pip3 install "transformers" accelerate torchaudio
 
-    # Install required Python packages
-    pip3 install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu115
-    pip3 install ctranslate2==4.4.0
-    pip3 install openai-whisper faster-whisper flask gunicorn celery redis psutil gputil
-    pip3 install flask-cors
+    # Kotoba v2.2（話者分離）依存
+    pip3 install "punctuators==0.0.5" "pyannote.audio"
+    pip3 install git+https://github.com/huggingface/diarizers.git
+
+    # ReazonSpeech k2-v2（公式SDK + sherpa-onnx）
+    git clone https://github.com/reazon-research/ReazonSpeech /opt/ReazonSpeech
+    pip3 install /opt/ReazonSpeech/pkg/k2-asr
+    pip3 install sherpa-onnx
+
+    # Qwen3-ASR（独自パッケージ。既定は transformers バックエンド）
+    pip3 install qwen-asr
+    # vLLMバックエンドを使う場合のみ有効化（V100ではxformers backendで最適化は限定的）:
+    # pip3 install "qwen-asr[vllm]"
+
+    # --- Web / タスクキュー / ユーティリティ ----------------------------------
+    pip3 install flask gunicorn celery redis psutil gputil flask-cors pyyaml
 
 %files
     voicenote.py /app/voicenote.py
+    engines /app/engines
+    config /app/config
     templates/index.html /app/templates/index.html
     static/css/style.css /app/static/css/style.css
     static/js/main.js /app/static/js/main.js
 
 %environment
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    # Qwen3-ASR のバックエンド (transformers | vllm)
+    QWEN_ASR_BACKEND=${QWEN_ASR_BACKEND:-transformers}
+    # Kotoba v2.2 の話者分離には HuggingFace トークンが必要。
+    # 起動時に SINGULARITYENV_HF_TOKEN=xxxx を渡すと HF_TOKEN として参照される。
+    export HF_TOKEN=${HF_TOKEN:-}
 
 %runscript
     export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
@@ -53,6 +72,16 @@ From: nvcr.io/nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
     redis-server --daemonize yes
     cd /app
     pkill -f 'celery worker'
+
+    # 既定: GPU 1枚で Celery ワーカー1本。
     celery -A voicenote.celery worker --loglevel=INFO -n worker1@%h -P solo &
+
+    # --- マルチGPU(V100 x4)で最大4件同時処理したい場合の例 ---------------------
+    # 上の1本起動をコメントアウトし、以下のように各ワーカーをGPUに固定する:
+    # CUDA_VISIBLE_DEVICES=0 celery -A voicenote.celery worker --loglevel=INFO -n worker0@%h -P solo &
+    # CUDA_VISIBLE_DEVICES=1 celery -A voicenote.celery worker --loglevel=INFO -n worker1@%h -P solo &
+    # CUDA_VISIBLE_DEVICES=2 celery -A voicenote.celery worker --loglevel=INFO -n worker2@%h -P solo &
+    # CUDA_VISIBLE_DEVICES=3 celery -A voicenote.celery worker --loglevel=INFO -n worker3@%h -P solo &
+
     pkill gunicorn
     gunicorn --bind 0.0.0.0:5000 -k sync -w 4 --timeout 7500 --graceful-timeout 300 --keep-alive 5 --max-requests 1000 --max-requests-jitter 50 voicenote:app

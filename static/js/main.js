@@ -4,7 +4,41 @@ $(document).ready(function() {
         $(this).toggleClass('active');
         $(this).next('.accordion-content').toggleClass('active');
     });
-    
+
+    // モデル一覧をサーバから取得してカテゴリ別プルダウンを構築
+    let modelVram = {};
+    function loadModels() {
+        $.get('/models', function(data) {
+            const $select = $('#model');
+            $select.empty();
+            modelVram = {};
+            (data.groups || []).forEach(function(group) {
+                const $optgroup = $('<optgroup>').attr('label', group.category);
+                (group.models || []).forEach(function(m) {
+                    modelVram[m.id] = m.vram || '';
+                    const $opt = $('<option>').val(m.id).text(m.label);
+                    if (m.id === data.default) {
+                        $opt.prop('selected', true);
+                    }
+                    $optgroup.append($opt);
+                });
+                $select.append($optgroup);
+            });
+            updateModelInfo();
+        }).fail(function() {
+            showAlert('モデル一覧の取得に失敗しました。ページを再読み込みしてください。', 'error');
+        });
+    }
+
+    function updateModelInfo() {
+        const id = $('#model').val();
+        const vram = modelVram[id];
+        $('#model-info').text(vram ? ('VRAM目安: ' + vram) : '');
+    }
+
+    $('#model').change(updateModelInfo);
+    loadModels();
+
     // フォーム送信
     $('#transcription-form').submit(function(event) {
         event.preventDefault();

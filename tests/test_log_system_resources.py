@@ -98,6 +98,25 @@ def load_voicenote(get_gpus_func):
     gputil_mod.getGPUs = get_gpus_func
     register('GPUtil', gputil_mod)
 
+    # config stub (このテストはエンジン/モデル定義に依存しないためスタブ化)
+    config_mod = types.ModuleType('config')
+    config_mod.get_model = lambda *a, **k: None
+    config_mod.get_default = lambda: 'large-v3'
+    config_mod.grouped_for_ui = lambda: {'default': 'large-v3', 'groups': []}
+    register('config', config_mod)
+
+    # engines.factory stub
+    engines_mod = types.ModuleType('engines')
+    engines_factory_mod = types.ModuleType('engines.factory')
+    class EngineFactory:
+        @staticmethod
+        def create(*a, **k):
+            return None
+    engines_factory_mod.EngineFactory = EngineFactory
+    engines_mod.factory = engines_factory_mod
+    register('engines', engines_mod)
+    register('engines.factory', engines_factory_mod)
+
     spec = importlib.util.spec_from_file_location('voicenote', VOICENOTE_PATH)
     module = importlib.util.module_from_spec(spec)
     sys.modules['voicenote'] = module
