@@ -4,7 +4,41 @@ $(document).ready(function() {
         $(this).toggleClass('active');
         $(this).next('.accordion-content').toggleClass('active');
     });
-    
+
+    // モデル一覧をサーバから取得してカテゴリ別プルダウンを構築
+    let modelDesc = {};
+    function loadModels() {
+        $.get('/models', function(data) {
+            const $select = $('#model');
+            $select.empty();
+            modelDesc = {};
+            (data.groups || []).forEach(function(group) {
+                const $optgroup = $('<optgroup>').attr('label', group.category);
+                (group.models || []).forEach(function(m) {
+                    modelDesc[m.id] = m.description || '';
+                    const $opt = $('<option>').val(m.id).text(m.label);
+                    if (m.id === data.default) {
+                        $opt.prop('selected', true);
+                    }
+                    $optgroup.append($opt);
+                });
+                $select.append($optgroup);
+            });
+            updateModelInfo();
+        }).fail(function() {
+            showAlert('モデル一覧の取得に失敗しました。ページを再読み込みしてください。', 'error');
+        });
+    }
+
+    // 選択中モデルの特徴（ユーザー向け説明）を表示
+    function updateModelInfo() {
+        const id = $('#model').val();
+        $('#model-info').text(modelDesc[id] || '');
+    }
+
+    $('#model').change(updateModelInfo);
+    loadModels();
+
     // フォーム送信
     $('#transcription-form').submit(function(event) {
         event.preventDefault();

@@ -201,6 +201,18 @@ button:hover {
     content: '-';
 }
 
+.model-info {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.accordion-content h4 {
+    margin: 1rem 0 0.5rem;
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
 .alert {
     padding: 1rem;
     border-radius: 6px;

@@ -34,20 +34,11 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="engine">エンジン選択</label>
-                            <select name="engine" id="engine">
-                                <option value="faster-whisper">Faster-Whisper（推奨）</option>
-                                <option value="whisper">Whisper</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
                             <label for="model">モデル選択</label>
                             <select name="model" id="model">
-                                <option value="large-v3">Large-v3（高精度）</option>
-                                <option value="turbo">Turbo（高速）</option>
-                                <option value="medium">Medium（バランス型）</option>
+                                <option value="" disabled>読み込み中...</option>
                             </select>
+                            <p id="model-info" class="model-info"></p>
                         </div>
                         
                         <div class="form-group">
@@ -61,12 +52,21 @@
                             <ol>
                                 <li>音声または動画ファイルをアップロードします</li>
                                 <li>言語を選択します（自動検出、日本語、英語）</li>
-                                <li>使用するエンジンとモデルを選択します</li>
+                                <li>モデルを選択します（カテゴリ別に表示されます）</li>
                                 <li>「文字起こし開始」ボタンをクリックします</li>
                                 <li>処理が完了するまでお待ちください</li>
                                 <li>完了したらダウンロードリンクが表示されます</li>
                             </ol>
                             <p>注意：ファイルサイズや長さによって処理時間が異なります。大きなファイルは時間がかかる場合があります。</p>
+
+                            <h4>モデルの使い分け</h4>
+                            <ul>
+                                <li><strong>Whisper Large-v3</strong>（既定）：多言語の汎用</li>
+                                <li><strong>ReazonSpeech k2-v2</strong>：日本語専用・高速・軽量</li>
+                                <li><strong>Kotoba v2.2</strong>：日本語・高精度・話者分離（議事録向け）</li>
+                                <li><strong>Kotoba v2.0</strong>：日本語・高精度・話者分離なし</li>
+                                <li><strong>Qwen3-ASR 1.7B</strong>：多言語・最高精度</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
