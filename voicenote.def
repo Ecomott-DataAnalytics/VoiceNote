@@ -24,14 +24,25 @@ From: nvcr.io/nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
     python3 -m pip install --upgrade pip
 
     # --- 機械学習ランタイム ---------------------------------------------------
-    # PyTorch (CUDA 12.4)。V100(Volta) は fp16 で動作（bf16/FA2 非対応）。
+    # PyTorch (CUDA 12.4)。V100(sm_70)〜RTX4090(sm_89)を1イメージで対応する。
+    # 重要: CUDA 13系(cu130)はVolta(V100)サポートを削除しているため使わない。
     pip3 install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
 
-    # Faster-Whisper（ctranslate2 を同梱）
+    # 以降の pip が torch/torchaudio を PyPI版(cu130等)へ上書きしないよう固定する。
+    # pyannote.audio / qwen-asr / torchaudio などが torch を引き直すのを防ぐ。
+    python3 - <<'PY'
+import torch, torchaudio
+with open("/opt/torch-constraints.txt", "w") as f:
+    f.write("torch==%s\n" % torch.__version__)
+    f.write("torchaudio==%s\n" % torchaudio.__version__)
+PY
+    export PIP_CONSTRAINT=/opt/torch-constraints.txt
+
+    # Faster-Whisper（ctranslate2 を同梱。CUDA 12 / cuDNN 9 対応）
     pip3 install faster-whisper
 
-    # transformers 系（Kotoba / 一般ASRパイプライン）
-    pip3 install "transformers" accelerate torchaudio
+    # transformers 系（Kotoba / 一般ASRパイプライン）。torchaudioは再指定しない。
+    pip3 install transformers accelerate
 
     # Kotoba v2.2（話者分離）依存
     pip3 install "punctuators==0.0.5" "pyannote.audio"
@@ -49,6 +60,9 @@ From: nvcr.io/nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
     # --- Web / タスクキュー / ユーティリティ ----------------------------------
     pip3 install flask gunicorn celery redis psutil gputil flask-cors pyyaml
+
+    # torch が CUDA 12 系のままか検証（cu130 等に化けていたらビルドを失敗させる）
+    python3 -c "import torch; v=torch.__version__; print('torch', v); assert '+cu12' in v, 'torch must be a CUDA 12.x build for V100(sm_70) support, got: '+v"
 
 %files
     # ディレクトリ一括コピーは %setup の mkdir 先と噛み合って配置がずれるため、
