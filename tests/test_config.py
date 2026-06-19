@@ -21,7 +21,16 @@ class ConfigTestCase(unittest.TestCase):
             self.assertIn(m.engine, VALID_ENGINES, f"未知のengine: {m.engine}")
             self.assertTrue(m.category, "category は必須")
             self.assertTrue(m.label, "label は必須")
+            # UIに表示するユーザー向けの特徴説明は全モデルに必須
+            self.assertTrue(m.description, f"description は必須: {m.id}")
             self.assertIsInstance(m.options, dict)
+
+    def test_ui_payload_has_description(self):
+        ui = config.grouped_for_ui()
+        for group in ui["groups"]:
+            for m in group["models"]:
+                self.assertIn("description", m)
+                self.assertTrue(m["description"])
 
     def test_default_is_valid(self):
         ids = {m.id for m in config.list_models()}

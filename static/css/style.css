@@ -213,24 +213,6 @@ button:hover {
     font-size: 0.95rem;
 }
 
-.vram-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
-}
-
-.vram-table th,
-.vram-table td {
-    border: 1px solid var(--gray);
-    padding: 0.4rem 0.6rem;
-    text-align: left;
-}
-
-.vram-table th {
-    background-color: var(--gray-light);
-}
-
 .alert {
     padding: 1rem;
     border-radius: 6px;

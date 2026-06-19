@@ -24,6 +24,7 @@ class ModelConfig:
     engine: str
     category: str
     label: str
+    description: str = ""
     vram: str = ""
     languages: Optional[List[str]] = None
     options: Dict = field(default_factory=dict)
@@ -48,6 +49,7 @@ def list_models() -> List[ModelConfig]:
                 engine=entry["engine"],
                 category=entry.get("category", "Other"),
                 label=entry.get("label", entry["id"]),
+                description=entry.get("description", ""),
                 vram=entry.get("vram", ""),
                 languages=entry.get("languages"),
                 options=entry.get("options", {}) or {},
@@ -82,7 +84,7 @@ def grouped_for_ui() -> dict:
     {
       "default": "...",
       "groups": [
-        {"category": "Whisper", "models": [{"id","label","vram","languages"}, ...]},
+        {"category": "Whisper", "models": [{"id","label","description"}, ...]},
         ...
       ]
     }
@@ -90,7 +92,7 @@ def grouped_for_ui() -> dict:
     groups: Dict[str, List[dict]] = {}
     for m in list_models():
         groups.setdefault(m.category, []).append(
-            {"id": m.id, "label": m.label, "vram": m.vram, "languages": m.languages}
+            {"id": m.id, "label": m.label, "description": m.description}
         )
 
     # 推奨順 → それ以外は登場順

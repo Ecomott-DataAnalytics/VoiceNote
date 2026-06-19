@@ -61,23 +61,12 @@
 
                             <h4>モデルの使い分け</h4>
                             <ul>
-                                <li><strong>ReazonSpeech k2-v2</strong>（既定）：日本語特化・軽量</li>
-                                <li><strong>Kotoba v2.2</strong>：高精度・話者分離（議事録向け / 要HFトークン）</li>
-                                <li><strong>Qwen3-ASR 1.7B</strong>：最高精度（多言語・重い）</li>
-                                <li><strong>Whisper Large-v3</strong>：多言語汎用</li>
+                                <li><strong>ReazonSpeech k2-v2</strong>（既定）：日本語専用・高速。迷ったらこれ</li>
+                                <li><strong>Kotoba v2.2</strong>：日本語・高精度・話者分離（議事録向け）</li>
+                                <li><strong>Kotoba v2.0</strong>：日本語・高精度・話者分離なし</li>
+                                <li><strong>Qwen3-ASR 1.7B</strong>：多言語・最高精度</li>
+                                <li><strong>Whisper Large-v3</strong>：多言語の汎用</li>
                             </ul>
-
-                            <h4>VRAM目安（V100 32GBなら全て動作可）</h4>
-                            <table class="vram-table">
-                                <thead><tr><th>モデル</th><th>VRAM</th></tr></thead>
-                                <tbody>
-                                    <tr><td>Whisper Large-v3</td><td>4〜6GB</td></tr>
-                                    <tr><td>Kotoba v2.2 / v2.0</td><td>5〜8GB</td></tr>
-                                    <tr><td>ReazonSpeech k2-v2</td><td>2〜4GB</td></tr>
-                                    <tr><td>Qwen3-ASR 0.6B</td><td>6〜10GB</td></tr>
-                                    <tr><td>Qwen3-ASR 1.7B</td><td>12〜20GB</td></tr>
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
