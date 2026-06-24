@@ -62,15 +62,50 @@ class KotobaEngine(STTEngine):
             device_str,
             self.diarization,
         )
-        self._pipe = pipeline(
-            "automatic-speech-recognition",
-            model=self.model_id,
-            torch_dtype=torch_dtype,
-            device=device_str,
-            model_kwargs=model_kwargs,
-            batch_size=8,
-            trust_remote_code=True,
-        )
+        def _build_pipeline(*args, **kwargs):
+            # dtype は model_kwargs に入れる。新しい transformers では top-level の
+            # dtype=/torch_dtype= を model_kwargs と併用すると（model_kwargs 側に dtype が
+            # 無くても）dtype 競合の ValueError になるため。新版は "dtype"、旧版は "torch_dtype"。
+            mk = dict(kwargs.pop("model_kwargs", {}) or {})
+            try:
+                return pipeline(*args, model_kwargs={**mk, "dtype": torch_dtype}, **kwargs)
+            except TypeError:
+                return pipeline(*args, model_kwargs={**mk, "torch_dtype": torch_dtype}, **kwargs)
+
+        if self.diarization:
+            # v2.2: 話者分離・句読点付与はモデル同梱のカスタムパイプラインが担う。
+            # task を "automatic-speech-recognition" に固定すると標準 Whisper パイプラインに
+            # なり add_punctuation が拒否されるため、task は指定せず trust_remote_code で
+            # カスタムパイプラインをロードする。
+            # また PyTorch 2.6 で torch.load の既定が weights_only=True になり、pyannote の
+            # チェックポイント(TorchVersion 等のグローバルを含む)が読めなくなるため、信頼できる
+            # ローカルモデルに限り読み込み中だけ weights_only=False を強制する。
+            _orig_torch_load = torch.load
+
+            def _trusting_torch_load(*a, **k):
+                k["weights_only"] = False  # lightning が True を明示するため setdefault では不可
+                return _orig_torch_load(*a, **k)
+
+            torch.load = _trusting_torch_load
+            try:
+                self._pipe = _build_pipeline(
+                    model=self.model_id,
+                    device=device_str,
+                    model_kwargs=model_kwargs,
+                    batch_size=8,
+                    trust_remote_code=True,
+                )
+            finally:
+                torch.load = _orig_torch_load
+        else:
+            self._pipe = _build_pipeline(
+                "automatic-speech-recognition",
+                model=self.model_id,
+                device=device_str,
+                model_kwargs=model_kwargs,
+                batch_size=8,
+                trust_remote_code=True,
+            )
         self._loaded = True
 
     def transcribe(
