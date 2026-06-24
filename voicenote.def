@@ -45,8 +45,16 @@ PY
     pip3 install transformers accelerate
 
     # Kotoba v2.2（話者分離）依存
-    pip3 install "punctuators==0.0.5" "pyannote.audio"
-    pip3 install git+https://github.com/huggingface/diarizers.git
+    # 重要(依存解決の罠):
+    # - pyannote.audio を版未指定で入れると、torch固定(PIP_CONSTRAINT)下で最新版を解決できず
+    #   依存のほぼ無い 1.1.2 まで後退して着地し、pyannote.audio.core が無く diarizers が import 失敗する。
+    # - diarizers を別コマンドで後入れすると、緩い依存指定により pyannote.audio を 1.1.2 へ巻き戻す。
+    # - 同梱の datasets 2.14 は pyarrow>=14 で削除された PyExtensionType を参照し、pyarrow24 で失敗する。
+    # 対策: pyannote.audio(3系) / datasets(3系) / diarizers を「同一 pip コマンド」で解決する。
+    #   datasets 4.x/5.x は datasets[audio] が torchcodec を要求し torch固定と衝突して長時間
+    #   バックトラックするため <4 で絞る（実機で 3.6.0 が解決・動作確認済み）。
+    pip3 install "punctuators==0.0.5"
+    pip3 install "pyannote.audio>=3.1,<4" "datasets>=3,<4" "git+https://github.com/huggingface/diarizers.git"
 
     # ReazonSpeech k2-v2（公式SDK + sherpa-onnx）
     git clone https://github.com/reazon-research/ReazonSpeech /opt/ReazonSpeech
@@ -90,6 +98,10 @@ PY
     cd /app
     python3 -c "import config; from engines.factory import EngineFactory; from engines.chunking import to_wav, transcribe_chunked; print('package layout OK:', EngineFactory)"
     python3 -c "import config; print('models loaded:', len(config.list_models()))"
+    # 話者分離(Kotoba v2.2)スタックの健全性をビルド時に検証する。
+    # pyannote.audio が 1.x に転落していたら（diarizers が動かない）ここでビルドを落とす。
+    python3 -c "import pyannote.audio as p; v=p.__version__; print('pyannote.audio', v); maj=int(v.split('.')[0]); assert 3 <= maj < 4, 'pyannote.audio must be 3.x for diarizers/kotoba-v2.2, got '+v"
+    python3 -c "import diarizers; print('diarizers import OK')"
 
 %environment
     CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
